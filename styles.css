@@ -1308,13 +1308,6 @@
   transition: stroke-width 0.2s ease;
 }
 
-.graph-node {
-  transition: transform 0.2s ease;
-}
-
-.graph-node:hover {
-  transform: scale(1.1);
-}
 
 .graph-node.is-center .node-dot {
   fill: var(--graph-node-center);
