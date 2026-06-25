@@ -183,7 +183,7 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
     this.renderSidebar(sidebar);
     const contentWrapper = gridLayout.createEl("main", { cls: "web-content-wrapper" });
     const contentArea = contentWrapper.createEl("article", { cls: "web-content-area" });
-    this.renderContentArea(contentArea);
+    void this.renderContentArea(contentArea);
     const rightSidebar = gridLayout.createEl("aside", { cls: "web-right-sidebar" });
     this.renderRightSidebar(rightSidebar);
   }
@@ -266,7 +266,7 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
     themeSelect.addEventListener("change", (e) => {
       const target = e.target;
       this.plugin.settings.theme = target.value;
-      this.plugin.saveSettings();
+      void this.plugin.saveSettings();
       this.plugin.refreshViews();
     });
   }
@@ -420,13 +420,13 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
     editBtn.createEl("span", { text: "Edit", cls: "btn-text" });
     editBtn.addEventListener("click", () => {
       const leaf = this.app.workspace.getLeaf("tab");
-      leaf.openFile(file);
+      void leaf.openFile(file);
     });
     const copyBtn = actions.createEl("button", { cls: "web-action-btn", attr: { "aria-label": "Copy note path" } });
     (0, import_obsidian2.setIcon)(copyBtn, "link");
     copyBtn.createEl("span", { text: "Link", cls: "btn-text" });
     copyBtn.addEventListener("click", () => {
-      navigator.clipboard.writeText(file.path);
+      void navigator.clipboard.writeText(file.path);
       copyBtn.addClass("is-success");
       const label = copyBtn.querySelector(".btn-text");
       if (label)
@@ -480,10 +480,10 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
               if (linkedFile) {
                 if (linkedFile.extension && linkedFile.extension.toLowerCase() !== "md") {
                   const leaf = this.app.workspace.getLeaf("tab");
-                  leaf.openFile(linkedFile);
+                  void leaf.openFile(linkedFile);
                 } else {
                   this.currentFile = linkedFile;
-                  await void this.updateActiveFileContent();
+                  await this.updateActiveFileContent();
                   if (anchor) {
                     const decodedAnchor = decodeURIComponent(anchor).toLowerCase().replace(/[\s_]+/g, " ");
                     window.setTimeout(() => {
@@ -774,7 +774,7 @@ var SearchModal = class extends import_obsidian2.Modal {
       if (this.debounceTimeout)
         window.clearTimeout(this.debounceTimeout);
       this.debounceTimeout = window.setTimeout(() => {
-        this.updateResults();
+        void this.updateResults();
       }, 150);
     });
     this.scope.register([], "ArrowDown", (e) => {
@@ -796,11 +796,11 @@ var SearchModal = class extends import_obsidian2.Modal {
       const selected = this.currentResults[this.selectedIndex];
       if (selected) {
         this.view.currentFile = selected;
-        this.view.updateActiveFileContent();
+        void this.view.updateActiveFileContent();
         this.close();
       }
     });
-    this.updateResults();
+    void this.updateResults();
   }
   onClose() {
     if (this.debounceTimeout)
@@ -870,7 +870,7 @@ var SearchModal = class extends import_obsidian2.Modal {
       }
       item.addEventListener("click", () => {
         this.view.currentFile = match.file;
-        this.view.updateActiveFileContent();
+        void this.view.updateActiveFileContent();
         this.close();
       });
     });

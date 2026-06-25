@@ -48,7 +48,7 @@ export class VaultWebsiteSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		(new Setting(containerEl) as any).setName('Vault Website View Settings').setHeading();
+		new Setting(containerEl).setName('Vault Website View Settings').setHeading();
 
 		new Setting(containerEl)
 			.setName('Website Theme')

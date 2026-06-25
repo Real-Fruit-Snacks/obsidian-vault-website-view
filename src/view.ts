@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, TFile, MarkdownRenderer, setIcon, Modal } from 'obsidian';
+import { App, ItemView, WorkspaceLeaf, TFile, MarkdownRenderer, setIcon, Modal } from 'obsidian';
 import type VaultWebsiteViewPlugin from './main';
 import { THEMES } from './settings';
 
@@ -11,13 +11,17 @@ interface TreeFolder {
 	files: TFile[];
 }
 
+interface BacklinksMap {
+	data: Record<string, unknown>;
+}
+
 export class VaultWebsiteView extends ItemView {
 	plugin: VaultWebsiteViewPlugin;
 	currentFile: TFile | null = null;
 	searchQuery = '';
 	expandedFolders: Set<string> = new Set();
 	sidebarCollapsed = false;
-	activeSearchModal: any = null;
+	activeSearchModal: SearchModal | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: VaultWebsiteViewPlugin) {
 		super(leaf);
@@ -111,7 +115,7 @@ export class VaultWebsiteView extends ItemView {
 		// Main Content Container
 		const contentWrapper = gridLayout.createEl('main', { cls: 'web-content-wrapper' });
 		const contentArea = contentWrapper.createEl('article', { cls: 'web-content-area' });
-		this.renderContentArea(contentArea);
+		void this.renderContentArea(contentArea);
 
 		// Right Sidebar (TOC, Backlinks, Graph)
 		const rightSidebar = gridLayout.createEl('aside', { cls: 'web-right-sidebar' });
@@ -223,7 +227,7 @@ export class VaultWebsiteView extends ItemView {
 		themeSelect.addEventListener('change', (e: Event) => {
 			const target = e.target as HTMLSelectElement;
 			this.plugin.settings.theme = target.value;
-			this.plugin.saveSettings();
+			void this.plugin.saveSettings();
 			this.plugin.refreshViews();
 		});
 	}
@@ -425,7 +429,7 @@ export class VaultWebsiteView extends ItemView {
 		editBtn.createEl('span', { text: 'Edit', cls: 'btn-text' });
 		editBtn.addEventListener('click', () => {
 			const leaf = this.app.workspace.getLeaf('tab');
-			leaf.openFile(file);
+			void leaf.openFile(file);
 		});
 
 		// Button: Copy Link
@@ -433,7 +437,7 @@ export class VaultWebsiteView extends ItemView {
 		setIcon(copyBtn, 'link');
 		copyBtn.createEl('span', { text: 'Link', cls: 'btn-text' });
 		copyBtn.addEventListener('click', () => {
-			navigator.clipboard.writeText(file.path);
+			void navigator.clipboard.writeText(file.path);
 			copyBtn.addClass('is-success');
 			const label = copyBtn.querySelector('.btn-text');
 			if (label) label.textContent = 'Copied!';
@@ -495,10 +499,10 @@ export class VaultWebsiteView extends ItemView {
 							if (linkedFile.extension && linkedFile.extension.toLowerCase() !== 'md') {
 								// Open natively in a new leaf (tab)
 								const leaf = this.app.workspace.getLeaf('tab');
-								leaf.openFile(linkedFile);
+								void leaf.openFile(linkedFile);
 							} else {
 								this.currentFile = linkedFile;
-								await void this.updateActiveFileContent();
+								await this.updateActiveFileContent();
 
 								if (anchor) {
 									const decodedAnchor = decodeURIComponent(anchor).toLowerCase().replace(/[\s_]+/g, ' ');
@@ -544,7 +548,7 @@ export class VaultWebsiteView extends ItemView {
 
 				const tocList = tocPanel.createEl('div', { cls: 'web-panel-toc-list' });
 
-				headings.forEach((heading: any) => {
+				headings.forEach((heading: { heading: string; level: number }) => {
 					const tocItem = tocList.createEl('div', {
 						text: heading.heading,
 						cls: `web-toc-item toc-level-${heading.level}`
@@ -579,7 +583,7 @@ export class VaultWebsiteView extends ItemView {
 
 		// 3. Backlinks Panel
 		if (this.plugin.settings.showBacklinks) {
-			const backlinksMap = (this.app.metadataCache as unknown as { getBacklinksForFile: (file: import('obsidian').TFile) => any }).getBacklinksForFile(file);
+			const backlinksMap = (this.app.metadataCache as unknown as { getBacklinksForFile: (file: TFile) => BacklinksMap }).getBacklinksForFile(file);
 			const backlinks: string[] = [];
 			
 			if (backlinksMap && backlinksMap.data) {
@@ -616,7 +620,7 @@ export class VaultWebsiteView extends ItemView {
 		if (!file) return;
 
 		// 1. Resolve Inward links (backlinks)
-		const backlinksMap = (this.app.metadataCache as unknown as { getBacklinksForFile: (file: import('obsidian').TFile) => any }).getBacklinksForFile(file);
+		const backlinksMap = (this.app.metadataCache as unknown as { getBacklinksForFile: (file: TFile) => BacklinksMap }).getBacklinksForFile(file);
 		const inwardPaths = new Set<string>();
 		if (backlinksMap && backlinksMap.data) {
 			for (const p of Object.keys(backlinksMap.data)) {
@@ -828,9 +832,9 @@ class SearchModal extends Modal {
 	currentResults: TFile[] = [];
 	inputEl!: HTMLInputElement;
 	resultsContainerEl!: HTMLElement;
-	debounceTimeout: any = null;
+	debounceTimeout: number | null = null;
 
-	constructor(app: any, view: VaultWebsiteView) {
+	constructor(app: App, view: VaultWebsiteView) {
 		super(app);
 		this.view = view;
 	}
@@ -863,7 +867,7 @@ class SearchModal extends Modal {
 			this.selectedIndex = 0;
 			if (this.debounceTimeout) window.clearTimeout(this.debounceTimeout);
 			this.debounceTimeout = window.setTimeout(() => {
-				this.updateResults();
+				void this.updateResults();
 			}, 150);
 		});
 
@@ -889,12 +893,12 @@ class SearchModal extends Modal {
 			const selected = this.currentResults[this.selectedIndex];
 			if (selected) {
 				this.view.currentFile = selected;
-				this.view.updateActiveFileContent();
+				void this.view.updateActiveFileContent();
 				this.close();
 			}
 		});
 
-		this.updateResults();
+		void this.updateResults();
 	}
 
 	onClose() {
@@ -981,7 +985,7 @@ class SearchModal extends Modal {
 
 			item.addEventListener('click', () => {
 				this.view.currentFile = match.file;
-				this.view.updateActiveFileContent();
+				void this.view.updateActiveFileContent();
 				this.close();
 			});
 		});
