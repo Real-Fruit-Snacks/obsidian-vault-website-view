@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-vault-website-view",
+  "name": "Vault Website View",
+  "version": "1.0.0",
+  "minAppVersion": "1.4.0",
+  "description": "View your Obsidian vault as an interactive website inside the app.",
+  "author": "Antigravity",
+  "authorUrl": "https://github.com/google-deepmind",
+  "isDesktopOnly": false
+}
