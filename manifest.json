@@ -1,7 +1,7 @@
 {
-  "id": "obsidian-vault-website-view",
+  "id": "vault-website-view",
   "name": "Vault Website View",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "1.4.0",
   "description": "View your Obsidian vault as an interactive website inside the app.",
   "author": "Real-Fruit-Snacks",

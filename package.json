@@ -1,6 +1,6 @@
 {
   "name": "obsidian-vault-website-view",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "View your Obsidian vault as an interactive website inside the app.",
   "main": "main.js",
   "type": "module",
