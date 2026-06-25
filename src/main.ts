@@ -16,14 +16,14 @@ export default class VaultWebsiteViewPlugin extends Plugin {
 
 		// Add Ribbon Icon
 		this.addRibbonIcon('globe', 'Open Vault Website Preview', () => {
-			this.activateView();
+			void this.activateView();
 		});
 
 		// Add Command
 		this.addCommand({
 			id: 'open-vault-website-preview',
 			name: 'Open Website Preview',
-			callback: () => this.activateView(),
+			callback: () => { void this.activateView(); },
 		});
 
 		// Add Settings Tab
@@ -53,14 +53,14 @@ export default class VaultWebsiteViewPlugin extends Plugin {
 
 		// Refresh when vault indexing completes (resolves startup partial load issues)
 		this.registerEvent(
-			(this.app.metadataCache as any).on('resolved', () => {
+			this.app.metadataCache.on('resolved', () => {
 				this.refreshViews(false);
 			})
 		);
 	}
 
 	async onunload() {
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_VAULT_WEBSITE);
+		// Don't detach leaves in onunload, as that will reset the leaf to it's default location when the plugin is loaded
 	}
 
 	async loadSettings() {
@@ -89,7 +89,7 @@ export default class VaultWebsiteViewPlugin extends Plugin {
 		for (const leaf of leaves) {
 			if (leaf.view instanceof VaultWebsiteView) {
 				if (contentOnly) {
-					leaf.view.updateActiveFileContent();
+					void leaf.view.updateActiveFileContent();
 				} else {
 					leaf.view.renderAll();
 				}

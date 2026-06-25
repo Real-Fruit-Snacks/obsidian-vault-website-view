@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, TFile, TFolder, MarkdownRenderer, setIcon, Modal } from 'obsidian';
+import { ItemView, WorkspaceLeaf, TFile, MarkdownRenderer, setIcon, Modal } from 'obsidian';
 import type VaultWebsiteViewPlugin from './main';
 import { THEMES } from './settings';
 
@@ -42,7 +42,7 @@ export class VaultWebsiteView extends ItemView {
 			this.currentFile = this.getDefaultFile();
 		}
 		this.expandToActiveFile();
-		this.renderAll();
+		void this.renderAll();
 
 		// Register Spotlight Search shortcut (Ctrl/Cmd + K)
 		const targetWindow = this.containerEl.ownerDocument.defaultView || window;
@@ -136,7 +136,7 @@ export class VaultWebsiteView extends ItemView {
 		const contentArea = container.querySelector('.web-content-area');
 		if (contentArea) {
 			contentArea.empty();
-			await this.renderContentArea(contentArea as HTMLElement);
+			await void this.renderContentArea(contentArea as HTMLElement);
 		}
 
 		// Re-render right sidebar
@@ -181,7 +181,7 @@ export class VaultWebsiteView extends ItemView {
 				// Expand
 				const folderChildren = el.querySelector('.web-sidebar-folder-children') as HTMLElement;
 				if (folderChildren) {
-					folderChildren.style.display = 'block';
+					folderChildren.removeClass('is-collapsed');
 				}
 				const chevSpan = el.querySelector('.web-sidebar-icon') as HTMLElement;
 				if (chevSpan) {
@@ -275,7 +275,7 @@ export class VaultWebsiteView extends ItemView {
 
 		for (const file of filteredFiles) {
 			const parts = file.path.split('/');
-			const filename = parts.pop();
+			parts.pop();
 			
 			let current = rootFolder;
 			for (const part of parts) {
@@ -326,7 +326,7 @@ export class VaultWebsiteView extends ItemView {
 
 				const folderChildren = folderEl.createEl('div', { cls: 'web-sidebar-folder-children' });
 				if (isCollapsed) {
-					folderChildren.style.display = 'none';
+					folderChildren.addClass('is-collapsed');
 				}
 
 				folderHeader.addEventListener('click', (e: Event) => {
@@ -334,11 +334,11 @@ export class VaultWebsiteView extends ItemView {
 					const isNowExpanded = !this.expandedFolders.has(folderPath);
 					if (isNowExpanded) {
 						this.expandedFolders.add(folderPath);
-						folderChildren.style.display = 'block';
+						folderChildren.removeClass('is-collapsed');
 						setIcon(chevSpan, 'chevron-down');
 					} else {
 						this.expandedFolders.delete(folderPath);
-						folderChildren.style.display = 'none';
+						folderChildren.addClass('is-collapsed');
 						setIcon(chevSpan, 'chevron-right');
 					}
 				});
@@ -364,9 +364,9 @@ export class VaultWebsiteView extends ItemView {
 
 				fileEl.createEl('span', { text: file.basename, cls: 'web-sidebar-file-title' });
 
-				fileEl.addEventListener('click', async () => {
+				fileEl.addEventListener('click', () => {
 					this.currentFile = file;
-					await this.updateActiveFileContent();
+					void this.updateActiveFileContent();
 				});
 			}
 		};
@@ -437,7 +437,7 @@ export class VaultWebsiteView extends ItemView {
 			copyBtn.addClass('is-success');
 			const label = copyBtn.querySelector('.btn-text');
 			if (label) label.textContent = 'Copied!';
-			setTimeout(() => {
+			window.setTimeout(() => {
 				copyBtn.removeClass('is-success');
 				if (label) label.textContent = 'Link';
 			}, 1500);
@@ -455,12 +455,13 @@ export class VaultWebsiteView extends ItemView {
 				file.path,
 				this
 			);
-		} catch (err) {
-			markdownBody.createEl('div', { text: `Error rendering note: ${err}`, cls: 'web-render-error' });
+		} catch (_err) {
+			markdownBody.createEl('div', { text: `Error rendering note: ${_err}`, cls: 'web-render-error' });
 		}
 
 		// Intercept clicks on links inside the rendered markdown to keep them inside our website view!
-		markdownBody.addEventListener('click', async (e: Event) => {
+		markdownBody.addEventListener('click', (e: Event) => {
+			void (async () => {
 			const target = e.target as HTMLElement;
 			const internalLink = target.closest('a.internal-link');
 			if (internalLink) {
@@ -497,11 +498,11 @@ export class VaultWebsiteView extends ItemView {
 								leaf.openFile(linkedFile);
 							} else {
 								this.currentFile = linkedFile;
-								await this.updateActiveFileContent();
+								await void this.updateActiveFileContent();
 
 								if (anchor) {
 									const decodedAnchor = decodeURIComponent(anchor).toLowerCase().replace(/[\s_]+/g, ' ');
-									setTimeout(() => {
+									window.setTimeout(() => {
 										const contentArea = this.contentEl.querySelector('.web-content-area');
 										if (contentArea) {
 											const headers = Array.from(contentArea.querySelectorAll('h1, h2, h3, h4, h5, h6'));
@@ -520,6 +521,7 @@ export class VaultWebsiteView extends ItemView {
 					}
 				}
 			}
+			})();
 		});
 	}
 
@@ -577,7 +579,7 @@ export class VaultWebsiteView extends ItemView {
 
 		// 3. Backlinks Panel
 		if (this.plugin.settings.showBacklinks) {
-			const backlinksMap = (this.app.metadataCache as any).getBacklinksForFile(file);
+			const backlinksMap = (this.app.metadataCache as unknown as { getBacklinksForFile: (file: import('obsidian').TFile) => any }).getBacklinksForFile(file);
 			const backlinks: string[] = [];
 			
 			if (backlinksMap && backlinksMap.data) {
@@ -601,7 +603,7 @@ export class VaultWebsiteView extends ItemView {
 						const linkedFile = this.app.vault.getAbstractFileByPath(path);
 						if (linkedFile instanceof TFile) {
 							this.currentFile = linkedFile;
-							this.updateActiveFileContent();
+							void this.updateActiveFileContent();
 						}
 					});
 				});
@@ -614,7 +616,7 @@ export class VaultWebsiteView extends ItemView {
 		if (!file) return;
 
 		// 1. Resolve Inward links (backlinks)
-		const backlinksMap = (this.app.metadataCache as any).getBacklinksForFile(file);
+		const backlinksMap = (this.app.metadataCache as unknown as { getBacklinksForFile: (file: import('obsidian').TFile) => any }).getBacklinksForFile(file);
 		const inwardPaths = new Set<string>();
 		if (backlinksMap && backlinksMap.data) {
 			for (const p of Object.keys(backlinksMap.data)) {
@@ -805,7 +807,7 @@ export class VaultWebsiteView extends ItemView {
 			if (!isCenter && n.file) {
 				nodeGroup.addEventListener('click', () => {
 					this.currentFile = n.file;
-					this.updateActiveFileContent();
+					void this.updateActiveFileContent();
 				});
 			}
 		});
@@ -859,8 +861,8 @@ class SearchModal extends Modal {
 
 		this.inputEl.addEventListener('input', () => {
 			this.selectedIndex = 0;
-			if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
-			this.debounceTimeout = setTimeout(() => {
+			if (this.debounceTimeout) window.clearTimeout(this.debounceTimeout);
+			this.debounceTimeout = window.setTimeout(() => {
 				this.updateResults();
 			}, 150);
 		});
@@ -896,7 +898,7 @@ class SearchModal extends Modal {
 	}
 
 	onClose() {
-		if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
+		if (this.debounceTimeout) window.clearTimeout(this.debounceTimeout);
 		this.contentEl.empty();
 		if (this.view.activeSearchModal === this) {
 			this.view.activeSearchModal = null;
@@ -942,7 +944,7 @@ class SearchModal extends Modal {
 						contentMatches++;
 						if (contentMatches >= needed) break;
 					}
-				} catch (err) {
+				} catch (_err) {
 					// Ignore
 				}
 			}
