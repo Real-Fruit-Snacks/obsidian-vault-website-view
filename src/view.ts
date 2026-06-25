@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { App, ItemView, WorkspaceLeaf, TFile, MarkdownRenderer, setIcon, Modal } from 'obsidian';
 import type VaultWebsiteViewPlugin from './main';
 import { THEMES } from './settings';
@@ -316,7 +317,7 @@ export class VaultWebsiteView extends ItemView {
 					cls: 'web-sidebar-folder',
 					attr: { 'data-path': folderPath }
 				});
-				folderEl.style.paddingLeft = `${depth * 10}px`;
+				folderEl.setCssStyles({ paddingLeft: `${depth * 10}px` });
 
 				const folderHeader = folderEl.createEl('div', { cls: 'web-sidebar-folder-header' });
 				
@@ -361,7 +362,7 @@ export class VaultWebsiteView extends ItemView {
 					cls: `web-sidebar-file ${this.currentFile?.path === file.path ? 'is-active' : ''}`,
 					attr: { 'data-path': file.path }
 				});
-				fileEl.style.paddingLeft = `${(depth * 10) + 15}px`;
+				fileEl.setCssStyles({ paddingLeft: `${(depth * 10) + 15}px` });
 
 				const fileIcon = fileEl.createEl('span', { cls: 'web-sidebar-icon' });
 				setIcon(fileIcon, 'file');

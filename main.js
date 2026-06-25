@@ -332,7 +332,7 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
           cls: "web-sidebar-folder",
           attr: { "data-path": folderPath }
         });
-        folderEl.style.paddingLeft = `${depth * 10}px`;
+        folderEl.setCssStyles({ paddingLeft: `${depth * 10}px` });
         const folderHeader = folderEl.createEl("div", { cls: "web-sidebar-folder-header" });
         const chevSpan = folderHeader.createEl("span", { cls: "web-sidebar-icon" });
         (0, import_obsidian2.setIcon)(chevSpan, isCollapsed ? "chevron-right" : "chevron-down");
@@ -367,7 +367,7 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
           cls: `web-sidebar-file ${this.currentFile?.path === file.path ? "is-active" : ""}`,
           attr: { "data-path": file.path }
         });
-        fileEl.style.paddingLeft = `${depth * 10 + 15}px`;
+        fileEl.setCssStyles({ paddingLeft: `${depth * 10 + 15}px` });
         const fileIcon = fileEl.createEl("span", { cls: "web-sidebar-icon" });
         (0, import_obsidian2.setIcon)(fileIcon, "file");
         fileEl.createEl("span", { text: file.basename, cls: "web-sidebar-file-title" });

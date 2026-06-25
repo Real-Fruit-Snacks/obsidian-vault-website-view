@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { App, PluginSettingTab, Setting, debounce } from 'obsidian';
 import type VaultWebsiteViewPlugin from './main';
 

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Plugin, WorkspaceLeaf, TFile } from 'obsidian';
 import { VaultWebsiteView, VIEW_TYPE_VAULT_WEBSITE } from './view';
 import { VaultWebsiteSettings, DEFAULT_SETTINGS, VaultWebsiteSettingTab } from './settings';

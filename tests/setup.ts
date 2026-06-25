@@ -16,6 +16,7 @@ declare global {
     addClass(...classes: string[]): void;
     removeClass(...classes: string[]): void;
     toggleClass(cls: string, value?: boolean): void;
+    setCssStyles(styles: Partial<CSSStyleDeclaration>): void;
   }
 }
 
@@ -87,6 +88,12 @@ if (typeof window !== 'undefined') {
       this.classList.add(cls);
     } else {
       this.classList.remove(cls);
+    }
+  };
+
+  Element.prototype.setCssStyles = function(this: any, styles: any) {
+    for (const [key, value] of Object.entries(styles)) {
+      this.style[key] = value;
     }
   };
 }
