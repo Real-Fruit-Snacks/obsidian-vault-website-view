@@ -68,7 +68,7 @@ var VaultWebsiteSettingTab = class extends import_obsidian.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "Vault Website View Settings" });
+    new import_obsidian.Setting(containerEl).setName("Vault Website View Settings").setHeading();
     new import_obsidian.Setting(containerEl).setName("Website Theme").setDesc("Choose the theme for the website view.").addDropdown((dropdown) => {
       for (const [id, label] of Object.entries(THEMES)) {
         dropdown.addOption(id, label);
@@ -131,7 +131,7 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
       this.currentFile = this.getDefaultFile();
     }
     this.expandToActiveFile();
-    this.renderAll();
+    void this.renderAll();
     const targetWindow = this.containerEl.ownerDocument.defaultView || window;
     this.registerDomEvent(targetWindow, "keydown", (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -198,7 +198,7 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
     const contentArea = container.querySelector(".web-content-area");
     if (contentArea) {
       contentArea.empty();
-      await this.renderContentArea(contentArea);
+      await void this.renderContentArea(contentArea);
     }
     const rightSidebar = container.querySelector(".web-right-sidebar");
     if (rightSidebar) {
@@ -234,7 +234,7 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
       if (folderPath && ancestorPaths.has(folderPath)) {
         const folderChildren = el.querySelector(".web-sidebar-folder-children");
         if (folderChildren) {
-          folderChildren.style.display = "block";
+          folderChildren.removeClass("is-collapsed");
         }
         const chevSpan = el.querySelector(".web-sidebar-icon");
         if (chevSpan) {
@@ -303,7 +303,7 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
     });
     for (const file of filteredFiles) {
       const parts = file.path.split("/");
-      const filename = parts.pop();
+      parts.pop();
       let current = rootFolder;
       for (const part of parts) {
         if (!current.folders.has(part)) {
@@ -341,18 +341,18 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
         folderHeader.createEl("span", { text: subfolder.name, cls: "web-sidebar-folder-title" });
         const folderChildren = folderEl.createEl("div", { cls: "web-sidebar-folder-children" });
         if (isCollapsed) {
-          folderChildren.style.display = "none";
+          folderChildren.addClass("is-collapsed");
         }
         folderHeader.addEventListener("click", (e) => {
           e.stopPropagation();
           const isNowExpanded = !this.expandedFolders.has(folderPath);
           if (isNowExpanded) {
             this.expandedFolders.add(folderPath);
-            folderChildren.style.display = "block";
+            folderChildren.removeClass("is-collapsed");
             (0, import_obsidian2.setIcon)(chevSpan, "chevron-down");
           } else {
             this.expandedFolders.delete(folderPath);
-            folderChildren.style.display = "none";
+            folderChildren.addClass("is-collapsed");
             (0, import_obsidian2.setIcon)(chevSpan, "chevron-right");
           }
         });
@@ -371,9 +371,9 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
         const fileIcon = fileEl.createEl("span", { cls: "web-sidebar-icon" });
         (0, import_obsidian2.setIcon)(fileIcon, "file");
         fileEl.createEl("span", { text: file.basename, cls: "web-sidebar-file-title" });
-        fileEl.addEventListener("click", async () => {
+        fileEl.addEventListener("click", () => {
           this.currentFile = file;
-          await this.updateActiveFileContent();
+          void this.updateActiveFileContent();
         });
       }
     };
@@ -431,7 +431,7 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
       const label = copyBtn.querySelector(".btn-text");
       if (label)
         label.textContent = "Copied!";
-      setTimeout(() => {
+      window.setTimeout(() => {
         copyBtn.removeClass("is-success");
         if (label)
           label.textContent = "Link";
@@ -447,63 +447,65 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
         file.path,
         this
       );
-    } catch (err) {
-      markdownBody.createEl("div", { text: `Error rendering note: ${err}`, cls: "web-render-error" });
+    } catch (_err) {
+      markdownBody.createEl("div", { text: `Error rendering note: ${_err}`, cls: "web-render-error" });
     }
-    markdownBody.addEventListener("click", async (e) => {
-      const target = e.target;
-      const internalLink = target.closest("a.internal-link");
-      if (internalLink) {
-        e.preventDefault();
-        e.stopPropagation();
-        const href = internalLink.getAttribute("data-href") || internalLink.getAttribute("href");
-        if (href) {
-          const hashIdx = href.indexOf("#");
-          const linkpath = hashIdx === -1 ? href : href.substring(0, hashIdx);
-          const anchor = hashIdx === -1 ? "" : href.substring(hashIdx + 1);
-          if (linkpath === "" && anchor) {
-            const contentArea = this.contentEl.querySelector(".web-content-area");
-            if (contentArea) {
-              const decodedAnchor = decodeURIComponent(anchor).toLowerCase().replace(/[\s_]+/g, " ");
-              const headers = Array.from(contentArea.querySelectorAll("h1, h2, h3, h4, h5, h6"));
-              const matchingEl = headers.find((el) => {
-                const text = el.textContent?.trim().toLowerCase().replace(/[\s_]+/g, " ") || "";
-                return text === decodedAnchor;
-              });
-              if (matchingEl) {
-                matchingEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    markdownBody.addEventListener("click", (e) => {
+      void (async () => {
+        const target = e.target;
+        const internalLink = target.closest("a.internal-link");
+        if (internalLink) {
+          e.preventDefault();
+          e.stopPropagation();
+          const href = internalLink.getAttribute("data-href") || internalLink.getAttribute("href");
+          if (href) {
+            const hashIdx = href.indexOf("#");
+            const linkpath = hashIdx === -1 ? href : href.substring(0, hashIdx);
+            const anchor = hashIdx === -1 ? "" : href.substring(hashIdx + 1);
+            if (linkpath === "" && anchor) {
+              const contentArea = this.contentEl.querySelector(".web-content-area");
+              if (contentArea) {
+                const decodedAnchor = decodeURIComponent(anchor).toLowerCase().replace(/[\s_]+/g, " ");
+                const headers = Array.from(contentArea.querySelectorAll("h1, h2, h3, h4, h5, h6"));
+                const matchingEl = headers.find((el) => {
+                  const text = el.textContent?.trim().toLowerCase().replace(/[\s_]+/g, " ") || "";
+                  return text === decodedAnchor;
+                });
+                if (matchingEl) {
+                  matchingEl.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
               }
-            }
-          } else {
-            const linkedFile = this.app.metadataCache.getFirstLinkpathDest(linkpath, file.path);
-            if (linkedFile) {
-              if (linkedFile.extension && linkedFile.extension.toLowerCase() !== "md") {
-                const leaf = this.app.workspace.getLeaf("tab");
-                leaf.openFile(linkedFile);
-              } else {
-                this.currentFile = linkedFile;
-                await this.updateActiveFileContent();
-                if (anchor) {
-                  const decodedAnchor = decodeURIComponent(anchor).toLowerCase().replace(/[\s_]+/g, " ");
-                  setTimeout(() => {
-                    const contentArea = this.contentEl.querySelector(".web-content-area");
-                    if (contentArea) {
-                      const headers = Array.from(contentArea.querySelectorAll("h1, h2, h3, h4, h5, h6"));
-                      const matchingEl = headers.find((el) => {
-                        const text = el.textContent?.trim().toLowerCase().replace(/[\s_]+/g, " ") || "";
-                        return text === decodedAnchor;
-                      });
-                      if (matchingEl) {
-                        matchingEl.scrollIntoView({ behavior: "smooth", block: "start" });
+            } else {
+              const linkedFile = this.app.metadataCache.getFirstLinkpathDest(linkpath, file.path);
+              if (linkedFile) {
+                if (linkedFile.extension && linkedFile.extension.toLowerCase() !== "md") {
+                  const leaf = this.app.workspace.getLeaf("tab");
+                  leaf.openFile(linkedFile);
+                } else {
+                  this.currentFile = linkedFile;
+                  await void this.updateActiveFileContent();
+                  if (anchor) {
+                    const decodedAnchor = decodeURIComponent(anchor).toLowerCase().replace(/[\s_]+/g, " ");
+                    window.setTimeout(() => {
+                      const contentArea = this.contentEl.querySelector(".web-content-area");
+                      if (contentArea) {
+                        const headers = Array.from(contentArea.querySelectorAll("h1, h2, h3, h4, h5, h6"));
+                        const matchingEl = headers.find((el) => {
+                          const text = el.textContent?.trim().toLowerCase().replace(/[\s_]+/g, " ") || "";
+                          return text === decodedAnchor;
+                        });
+                        if (matchingEl) {
+                          matchingEl.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }
                       }
-                    }
-                  }, 100);
+                    }, 100);
+                  }
                 }
               }
             }
           }
         }
-      }
+      })();
     });
   }
   renderRightSidebar(parent) {
@@ -569,7 +571,7 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
             const linkedFile = this.app.vault.getAbstractFileByPath(path);
             if (linkedFile instanceof import_obsidian2.TFile) {
               this.currentFile = linkedFile;
-              this.updateActiveFileContent();
+              void this.updateActiveFileContent();
             }
           });
         });
@@ -731,7 +733,7 @@ var VaultWebsiteView = class _VaultWebsiteView extends import_obsidian2.ItemView
       if (!isCenter && n.file) {
         nodeGroup.addEventListener("click", () => {
           this.currentFile = n.file;
-          this.updateActiveFileContent();
+          void this.updateActiveFileContent();
         });
       }
     });
@@ -770,8 +772,8 @@ var SearchModal = class extends import_obsidian2.Modal {
     this.inputEl.addEventListener("input", () => {
       this.selectedIndex = 0;
       if (this.debounceTimeout)
-        clearTimeout(this.debounceTimeout);
-      this.debounceTimeout = setTimeout(() => {
+        window.clearTimeout(this.debounceTimeout);
+      this.debounceTimeout = window.setTimeout(() => {
         this.updateResults();
       }, 150);
     });
@@ -802,7 +804,7 @@ var SearchModal = class extends import_obsidian2.Modal {
   }
   onClose() {
     if (this.debounceTimeout)
-      clearTimeout(this.debounceTimeout);
+      window.clearTimeout(this.debounceTimeout);
     this.contentEl.empty();
     if (this.view.activeSearchModal === this) {
       this.view.activeSearchModal = null;
@@ -842,7 +844,7 @@ var SearchModal = class extends import_obsidian2.Modal {
             if (contentMatches >= needed)
               break;
           }
-        } catch (err) {
+        } catch (_err) {
         }
       }
     }
@@ -894,12 +896,14 @@ var VaultWebsiteViewPlugin = class extends import_obsidian3.Plugin {
       (leaf) => new VaultWebsiteView(leaf, this)
     );
     this.addRibbonIcon("globe", "Open Vault Website Preview", () => {
-      this.activateView();
+      void this.activateView();
     });
     this.addCommand({
       id: "open-vault-website-preview",
       name: "Open Website Preview",
-      callback: () => this.activateView()
+      callback: () => {
+        void this.activateView();
+      }
     });
     this.addSettingTab(new VaultWebsiteSettingTab(this.app, this));
     this.registerEvent(
@@ -926,7 +930,6 @@ var VaultWebsiteViewPlugin = class extends import_obsidian3.Plugin {
     );
   }
   async onunload() {
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE_VAULT_WEBSITE);
   }
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -948,7 +951,7 @@ var VaultWebsiteViewPlugin = class extends import_obsidian3.Plugin {
     for (const leaf of leaves) {
       if (leaf.view instanceof VaultWebsiteView) {
         if (contentOnly) {
-          leaf.view.updateActiveFileContent();
+          void leaf.view.updateActiveFileContent();
         } else {
           leaf.view.renderAll();
         }

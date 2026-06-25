@@ -22,7 +22,7 @@ describe('Settings Tab Integration', () => {
     tab.display();
 
     // Verify heading is rendered
-    const title = tab.containerEl.querySelector('h2');
+    const title = tab.containerEl.querySelector('.setting-item-name');
     expect(title?.textContent).toBe('Vault Website View Settings');
 
     // Simulate modifying theme via select dropdown

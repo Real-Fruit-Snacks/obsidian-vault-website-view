@@ -136,7 +136,7 @@ describe('Challenger 1 Stress Tests', () => {
 
     // Open search modal
     view.openSearchModal();
-    const modal = view.activeSearchModal;
+    const modal = view.activeSearchModal as any;
     expect(modal).not.toBeNull();
 
     // Spy on cachedRead

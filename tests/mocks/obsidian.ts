@@ -258,6 +258,11 @@ export class Setting {
     return this;
   }
 
+  setHeading() {
+    this.settingEl.classList.add('setting-item-heading');
+    return this;
+  }
+
   addDropdown(callback: (dropdown: DropdownComponent) => any) {
     const dropdown = new DropdownComponent(this.controlEl);
     callback(dropdown);
